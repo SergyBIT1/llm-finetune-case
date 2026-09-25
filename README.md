@@ -4,12 +4,12 @@
 о вакансиях из постов Telegram-каналов (строгий JSON). Задача взята из
 собственного инструмента (tg-vacancy-collector, этап 2 — классификация).
 
-> **Статус.** Это воспроизводимый **пайплайн** (данные → обучение → оценка →
-> публикация), а не выложенная готовая модель. Датасет генерируется и уже
-> лежит в `data/`; обучение запускается в Google Colab (T4) по шагам ниже.
-> Метрики и ссылка на модель в `model_card.md` помечены `[ЗАПОЛНИТЬ]` — их
-> вписывают после прогона. Датасет синтетический, цель — показать сам процесс,
-> а не production-качество.
+> **Статус.** Полный **воспроизводимый пайплайн** (данные → обучение → оценка
+> → адаптер). Обучение уже прогнано локально на Apple M1 Pro (Qwen2.5-0.5B,
+> PEFT-LoRA): **eval_loss 0.40**, реальные метрики и примеры — в
+> `model_card.md` и `out/`. Целевой сценарий (3B, QLoRA на GPU) — в
+> `train_unsloth.py` для Colab. Датасет синтетический: цель — показать сам
+> процесс, а не production-качество.
 
 ## Состав
 
@@ -17,21 +17,34 @@
   вакансии в 3 стилях + трудные негативы: резюме, курсы, продажи, спам;
   дедупликация, train/val сплит). Без внешних зависимостей.
 - `data/train.jsonl`, `data/val.jsonl` — готовый датасет
-- `train_unsloth.py` — скрипт обучения для Google Colab (QLoRA, Unsloth)
-- `model_card.md` — заготовка README для Hugging Face
+- `train_unsloth.py` — целевой скрипт обучения для Google Colab (3B, QLoRA,
+  Unsloth; требует GPU/CUDA)
+- `train_local.py` — прогон без GPU (Apple Silicon MPS / CPU): обычный
+  PEFT-LoRA на уменьшенной модели, чтобы воспроизвести цикл там, где CUDA нет
+- `model_card.md` — карточка модели с реальными метриками локального прогона
 
-## Порядок действий
+## Быстрый локальный прогон (без GPU)
 
-1. Локально: `python3 make_dataset.py` (уже прогнан, data/ готова)
-2. colab.research.google.com → новый ноутбук → Runtime → Change runtime
-   type → T4 GPU
-3. Скопируй блоки из `train_unsloth.py` по ячейкам, загрузи
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-local.txt
+python make_dataset.py            # data/ (уже готова в репозитории)
+python train_local.py             # Qwen2.5-0.5B, LoRA на MPS/CPU
+# результат: out/metrics.json, out/samples.txt, out/adapter/
+# метрики зафиксированного прогона лежат в results/
+```
+
+Параметры настраиваются через переменные окружения: `BASE_MODEL`, `EPOCHS`,
+`MAX_LEN`, `BATCH`, `GRAD_ACCUM`, `MAX_TRAIN`.
+
+## Целевой сценарий на GPU (Colab, 3B QLoRA)
+
+1. colab.research.google.com → Runtime → Change runtime type → T4 GPU
+2. Скопируй блоки из `train_unsloth.py` по ячейкам, загрузи
    `train.jsonl`/`val.jsonl` через панель Files
-4. Прогони ячейки 1–6 (~30–40 минут вместе с установкой). Запиши
-   train/val loss по эпохам
-5. Зарегистрируйся на huggingface.co (если нет), создай token (write),
-   выполни ячейку 7 — адаптер уедет в твой репозиторий
-6. Вставь `model_card.md` как README модели на HF, заполнив loss
+3. Прогони ячейки 1–6 (~30–40 минут). Запиши train/val loss по эпохам
+4. huggingface.co → token (write) → ячейка 7 запушит адаптер в твой репозиторий
+5. Вставь `model_card.md` как README модели на HF
 
 ## Зачем
 

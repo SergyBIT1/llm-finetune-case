@@ -1,0 +1,8 @@
+# Зависимости для локального прогона train_local.py (CPU / Apple Silicon MPS).
+# GPU-сценарий (train_unsloth.py) ставит unsloth отдельно в Colab.
+torch>=2.2
+transformers>=4.44
+peft>=0.12
+trl>=0.9
+datasets>=2.20
+accelerate>=0.33

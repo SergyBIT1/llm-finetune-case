@@ -1,0 +1,22 @@
+{
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "device": "mps",
+  "epochs": 1.0,
+  "learning_rate": 0.0002,
+  "max_len": 256,
+  "final_train_loss": 1.2157,
+  "history": [
+    {
+      "epoch": 0.4,
+      "train_loss": 2.2456
+    },
+    {
+      "epoch": 0.8,
+      "train_loss": 0.6078
+    },
+    {
+      "epoch": 1.0,
+      "eval_loss": 0.3976
+    }
+  ]
+}

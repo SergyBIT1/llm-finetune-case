@@ -1,3 +1,9 @@
 out/
 __pycache__/
 .env
+.venv*/
+*.log
+.hfcache/
+.pipcache/
+train_run*.log
+infer_run.log
